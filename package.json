@@ -1,0 +1,30 @@
+{
+  "name": "things3-cli",
+  "version": "1.0.0",
+  "description": "Comprehensive CLI for Things 3 task management with rollback support",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "things3": "dist/things3"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --compile --outfile dist/things3",
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "install-cli": "cp dist/things3 ~/.tron/mods/things3"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
+    "better-sqlite3": "^11.7.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "@types/better-sqlite3": "^7.6.12",
+    "typescript": "^5.7.2"
+  }
+}
