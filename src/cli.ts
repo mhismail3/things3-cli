@@ -7,6 +7,7 @@
 import { Command } from 'commander';
 import { CLI_VERSION, THINGS_LISTS } from './config';
 import { createOutputOptions, formatSuccess, formatError, formatJson, print, printError, formatSnapshotInfo, formatItemList, formatTable } from './core/output';
+import { setSessionAuthToken } from './core/auth';
 
 // Commands
 import { showCommand } from './commands/show';
@@ -37,7 +38,16 @@ program
   .option('--json', 'Output in JSON format')
   .option('--no-color', 'Disable colored output')
   .option('--quiet', 'Suppress non-essential output')
-  .option('--dry-run', 'Show what would be done without executing');
+  .option('--dry-run', 'Show what would be done without executing')
+  .option('--auth-token <token>', 'Override auth token (for different Things accounts)');
+
+// Set up auth token override before any command runs
+program.hook('preAction', () => {
+  const opts = program.opts();
+  if (opts.authToken) {
+    setSessionAuthToken(opts.authToken);
+  }
+});
 
 // Show command - extended with more targets
 const SHOW_TARGETS = [

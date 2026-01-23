@@ -2,7 +2,10 @@
  * Auth Token Management
  *
  * Manages the Things 3 authorization token required for update operations.
- * Token is stored in ~/.tron/auth.json under the "things3" key.
+ *
+ * Token resolution order:
+ * 1. CLI override via --auth-token flag (for using different Things accounts)
+ * 2. Default token from ~/.tron/auth.json under the "things3" key
  *
  * IMPORTANT: This file is careful to preserve all existing auth.json content
  * and only modifies the "things3" property.
@@ -11,6 +14,27 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { AUTH_JSON_PATH, TRON_DIR } from '../config';
+
+/**
+ * Session-level auth token override (set via --auth-token CLI flag)
+ * Takes precedence over the stored token in auth.json
+ */
+let sessionAuthToken: string | null = null;
+
+/**
+ * Set a session-level auth token override
+ * This is used by the CLI when --auth-token is provided
+ */
+export function setSessionAuthToken(token: string | null): void {
+  sessionAuthToken = token?.trim() || null;
+}
+
+/**
+ * Get the current session auth token override (if any)
+ */
+export function getSessionAuthToken(): string | null {
+  return sessionAuthToken;
+}
 
 /**
  * Custom error for auth token issues
@@ -90,9 +114,21 @@ function writeAuthJson(authData: AuthJson): void {
 }
 
 /**
- * Get the stored auth token, or null if not set
+ * Get the auth token to use for this session
+ *
+ * Resolution order:
+ * 1. Session override (--auth-token CLI flag) - for different Things accounts
+ * 2. Stored token from ~/.tron/auth.json - default account
+ *
+ * @returns The auth token or null if not configured
  */
 export function getAuthToken(): string | null {
+  // Check for session override first (CLI --auth-token flag)
+  if (sessionAuthToken) {
+    return sessionAuthToken;
+  }
+
+  // Fall back to stored token in auth.json
   try {
     const authData = readAuthJson();
     const token = authData.things3?.authToken;

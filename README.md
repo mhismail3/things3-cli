@@ -17,7 +17,11 @@ export PATH="$HOME/.tron/mods:$PATH"
 
 ## Authentication
 
-Some operations require an auth token from Things 3:
+Some operations (update, complete, cancel) require an auth token from Things 3.
+
+### Default Token (Tron Account)
+
+The CLI uses `~/.tron/auth.json` by default. Set up once:
 
 1. Open Things 3 → Settings → General
 2. Enable "Things URLs"
@@ -28,6 +32,16 @@ things3 auth setup YOUR_TOKEN_HERE
 things3 auth show    # Verify it's set
 things3 auth test    # Test the token
 ```
+
+### Using a Different Token
+
+To override the default token for a single command, use `--auth-token`:
+
+```bash
+things3 complete <id> --auth-token "OTHER_TOKEN"
+```
+
+Read-only operations (query, get, search) don't require auth.
 
 ## Commands
 
@@ -133,10 +147,11 @@ things3 snapshots purge --days 30  # Clean old snapshots
 ## Global Options
 
 ```bash
---json       # Output as JSON (for programmatic use)
---dry-run    # Show what would happen without executing
---quiet      # Suppress non-essential output
---no-color   # Disable colored output
+--json              # Output as JSON (for programmatic use)
+--dry-run           # Show what would happen without executing
+--quiet             # Suppress non-essential output
+--no-color          # Disable colored output
+--auth-token <tok>  # Override auth token for this command
 ```
 
 ## JSON Output
