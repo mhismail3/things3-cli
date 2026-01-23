@@ -137,12 +137,12 @@ export async function queryList(listId: ThingsListId): Promise<ThingsTodo[]> {
           type: 'to-do' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
-          projectId: projectId || undefined,
-          areaId: areaId || undefined,
+          projectId: cleanValue(projectId),
+          areaId: cleanValue(areaId),
           creationDate: '',
           modificationDate: '',
         };
@@ -253,12 +253,12 @@ export async function queryById(itemId: string): Promise<ThingsItem | null> {
         type: 'to-do',
         title,
         status: mapStatus(status),
-        notes: notes || undefined,
-        when: when || undefined,
-        deadline: deadline || undefined,
+        notes: cleanValue(notes),
+        when: cleanValue(when),
+        deadline: cleanValue(deadline),
         tags: tags ? tags.split(',').filter(Boolean) : undefined,
-        projectId: projectId || undefined,
-        areaId: areaId || undefined,
+        projectId: cleanValue(projectId),
+        areaId: cleanValue(areaId),
         creationDate: '',
         modificationDate: '',
       };
@@ -271,11 +271,11 @@ export async function queryById(itemId: string): Promise<ThingsItem | null> {
         type: 'project',
         title,
         status: mapStatus(status),
-        notes: notes || undefined,
-        when: when || undefined,
-        deadline: deadline || undefined,
+        notes: cleanValue(notes),
+        when: cleanValue(when),
+        deadline: cleanValue(deadline),
         tags: tags ? tags.split(',').filter(Boolean) : undefined,
-        areaId: areaId || undefined,
+        areaId: cleanValue(areaId),
         creationDate: '',
         modificationDate: '',
       };
@@ -360,12 +360,12 @@ export async function queryByTag(tagName: string): Promise<ThingsTodo[]> {
           type: 'to-do' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
-          projectId: projectId || undefined,
-          areaId: areaId || undefined,
+          projectId: cleanValue(projectId),
+          areaId: cleanValue(areaId),
           creationDate: '',
           modificationDate: '',
         };
@@ -430,9 +430,9 @@ export async function queryProject(projectId: string): Promise<ThingsTodo[]> {
           type: 'to-do' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
           projectId,
           creationDate: '',
@@ -510,9 +510,9 @@ export async function queryArea(areaId: string): Promise<ThingsItem[]> {
             type: 'project' as const,
             title,
             status: mapStatus(status),
-            notes: notes || undefined,
-            when: when || undefined,
-            deadline: deadline || undefined,
+            notes: cleanValue(notes),
+            when: cleanValue(when),
+            deadline: cleanValue(deadline),
             areaId,
             creationDate: '',
             modificationDate: '',
@@ -524,9 +524,9 @@ export async function queryArea(areaId: string): Promise<ThingsItem[]> {
             type: 'to-do' as const,
             title,
             status: mapStatus(status),
-            notes: notes || undefined,
-            when: when || undefined,
-            deadline: deadline || undefined,
+            notes: cleanValue(notes),
+            when: cleanValue(when),
+            deadline: cleanValue(deadline),
             areaId,
             creationDate: '',
             modificationDate: '',
@@ -594,11 +594,11 @@ export async function getAllProjects(): Promise<ThingsProject[]> {
           type: 'project' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
-          areaId: areaId || undefined,
+          areaId: cleanValue(areaId),
           creationDate: '',
           modificationDate: '',
         };
@@ -774,12 +774,12 @@ export async function queryDeadlines(): Promise<ThingsTodo[]> {
           type: 'to-do' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
-          projectId: projectId || undefined,
-          areaId: areaId || undefined,
+          projectId: cleanValue(projectId),
+          areaId: cleanValue(areaId),
           creationDate: '',
           modificationDate: '',
         };
@@ -855,12 +855,12 @@ export async function queryRepeating(): Promise<ThingsTodo[]> {
           type: 'to-do' as const,
           title,
           status: mapStatus(status),
-          notes: notes || undefined,
-          when: when || undefined,
-          deadline: deadline || undefined,
+          notes: cleanValue(notes),
+          when: cleanValue(when),
+          deadline: cleanValue(deadline),
           tags: tags ? tags.split(',').filter(Boolean) : undefined,
-          projectId: projectId || undefined,
-          areaId: areaId || undefined,
+          projectId: cleanValue(projectId),
+          areaId: cleanValue(areaId),
           creationDate: '',
           modificationDate: '',
         };
@@ -878,4 +878,49 @@ function mapStatus(status: string): 'open' | 'completed' | 'canceled' {
   if (statusLower.includes('complet')) return 'completed';
   if (statusLower.includes('cancel')) return 'canceled';
   return 'open';
+}
+
+/**
+ * Clean AppleScript values - filter out "missing value" and empty strings
+ */
+function cleanValue(value: string | undefined): string | undefined {
+  if (!value || value === 'missing value' || value.trim() === '') {
+    return undefined;
+  }
+  return value;
+}
+
+/**
+ * Check if an item exists in Things (to-do, project, or area)
+ * Returns the item type if found, null if not found
+ */
+export async function itemExists(itemId: string): Promise<'to-do' | 'project' | 'area' | null> {
+  const script = buildAppleScript(`
+    try
+      set t to to do id "${itemId}"
+      return "to-do"
+    on error
+      try
+        set p to project id "${itemId}"
+        return "project"
+      on error
+        try
+          set a to area id "${itemId}"
+          return "area"
+        on error
+          return ""
+        end try
+      end try
+    end try
+  `);
+
+  try {
+    const result = await runAppleScript(script);
+    if (result === 'to-do' || result === 'project' || result === 'area') {
+      return result;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

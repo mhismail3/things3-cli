@@ -16,6 +16,7 @@ import {
   buildCancelUrl,
 } from '../core/url-builder';
 import { executeUrl, ExecutionResult } from '../core/url-executor';
+import { itemExists } from '../core/applescript';
 import type {
   AddTodoParams,
   AddProjectParams,
@@ -96,6 +97,18 @@ export class ThingsClient {
     const authError = this.requireAuth();
     if (authError) return authError;
 
+    // Verify item exists before attempting to update (skip in dry-run mode)
+    if (!this.dryRun) {
+      const exists = await itemExists(params.id);
+      if (!exists) {
+        return {
+          success: false,
+          url: '',
+          error: `Item with ID "${params.id}" does not exist`,
+        };
+      }
+    }
+
     const url = buildUpdateUrl(params, this.authToken!);
     return this.execute(url);
   }
@@ -106,6 +119,20 @@ export class ThingsClient {
   async updateProject(params: UpdateProjectParams): Promise<ExecutionResult> {
     const authError = this.requireAuth();
     if (authError) return authError;
+
+    // Verify project exists before attempting to update (skip in dry-run mode)
+    if (!this.dryRun) {
+      const exists = await itemExists(params.id);
+      if (exists !== 'project') {
+        return {
+          success: false,
+          url: '',
+          error: exists
+            ? `Item "${params.id}" is a ${exists}, not a project`
+            : `Project with ID "${params.id}" does not exist`,
+        };
+      }
+    }
 
     const url = buildUpdateProjectUrl(params, this.authToken!);
     return this.execute(url);
@@ -118,6 +145,18 @@ export class ThingsClient {
     const authError = this.requireAuth();
     if (authError) return authError;
 
+    // Verify item exists before attempting to complete (skip in dry-run mode)
+    if (!this.dryRun) {
+      const exists = await itemExists(id);
+      if (!exists) {
+        return {
+          success: false,
+          url: '',
+          error: `Item with ID "${id}" does not exist`,
+        };
+      }
+    }
+
     const url = buildCompleteUrl(id, this.authToken!);
     return this.execute(url);
   }
@@ -128,6 +167,18 @@ export class ThingsClient {
   async cancelTodo(id: string): Promise<ExecutionResult> {
     const authError = this.requireAuth();
     if (authError) return authError;
+
+    // Verify item exists before attempting to cancel (skip in dry-run mode)
+    if (!this.dryRun) {
+      const exists = await itemExists(id);
+      if (!exists) {
+        return {
+          success: false,
+          url: '',
+          error: `Item with ID "${id}" does not exist`,
+        };
+      }
+    }
 
     const url = buildCancelUrl(id, this.authToken!);
     return this.execute(url);

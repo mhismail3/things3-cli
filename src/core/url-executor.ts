@@ -61,7 +61,8 @@ export async function executeUrl(
 
   try {
     // Use the open command to execute the URL
-    const proc = Bun.spawn(['open', url], {
+    // -g flag keeps Things in the background (doesn't bring to foreground)
+    const proc = Bun.spawn(['open', '-g', url], {
       stdout: 'pipe',
       stderr: 'pipe',
     });
