@@ -22,3 +22,4 @@ coverage/
 # Local config (auth tokens, etc.)
 .env
 .env.local
+*.bun-build
